@@ -1,42 +1,29 @@
 var Discord = require("discord.io");
-var WebSocket = require("ws");
-var net = require("net");
+var Server = require("./sockets/Server");
+var Socket = require("./sockets/Socket");
 
 var bot = new Discord.Client({
 	token: process.argv[2],
 	autorun: true
 });
 
-var wss = new WebSocket.Server({
-	port: 28069
-});
-var server = net.createServer();
-server.listen(42069, '0.0.0.0');
-
 bot.on('ready', function() {
 	console.log('Ready! %s - %s', bot.username, bot.id);
 });
 
-//TODO: Abstraction layer
+var server = new Server();
+server.onConnection((socket) => {
+	console.log("Connection from socket type " + socket.socketType());
+	console.log("  Address: " + socket.address);
+	console.log("  Port: " + socket.port);
 
-server.on('connection', function(socket) {
-	var address = socket.address();
-	console.log('TCP Connect: ' + address.address + ':' + address.port);
-	socket.on('end', function() {
-		console.log('TCP Disconnect: ' + address.address + ':' + address.port);
+	socket.onDataReceived((data) => {
+    	console.log("Received Data: " + data);
 	});
-	socket.on('data', function(data) {
-		console.log('TCP Data: ' + data);
-	});
-});
-
-wss.on('connection', function(ws, req) {
-	var address = req.connection.address();
-	console.log('WS Connect: ' + address.address + ':' + address.port);
-	ws.on('close', function() {
-		console.log('WS Disconnect: ' + address.address + ':' + address.port);
-	});
-	ws.on('message', function(data) {
-		console.log('WS Data: ' + data);
+	
+	socket.onDisconnect(() => {
+		console.log("Connection disconnected.");
+		console.log("  Address: " + socket.address);
+		console.log("  Port: " + socket.port);
 	});
 });
