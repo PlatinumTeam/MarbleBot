@@ -11,7 +11,13 @@ bot.on('ready', function() {
 	console.log('Ready! %s - %s', bot.username, bot.id);
 });
 
-var server = new Server();
+var server = new Server({
+	ports: {
+		websocket: 28069,
+		tcp: 42069
+	},
+	subnetMask: '0.0.0.0'
+});
 server.onConnection((socket) => {
 	console.log("Connection from socket type " + socket.socketType());
 	console.log("  Address: " + socket.address);

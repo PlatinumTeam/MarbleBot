@@ -3,17 +3,16 @@ var net = require("net");
 var TCPSocket = require("./TCPSocket");
 var WebSocket = require("./WebSocket");
 
-const WEBSOCKET_PORT = 28069;
-const TCPSERVER_PORT = 42069;
-
 module.exports = class Server {
-	constructor() {
+	constructor(options) {
+		this.options = options;
+
 		this.websocketServer = new wss.Server({
-			port: WEBSOCKET_PORT
+			port: options.ports.websocket
 		});
 
 		this.tcpServer = new net.createServer();
-		this.tcpServer.listen(TCPSERVER_PORT, '0.0.0.0');
+		this.tcpServer.listen(options.ports.tcp, options.subnetMask);
 	}
 
 	/**
