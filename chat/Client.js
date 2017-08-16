@@ -22,6 +22,6 @@ module.exports = class Client extends EventEmitter {
 	}
 
 	_sendRaw(data) {
-		socket.send(data);
+		this._socket.send(data);
 	}
 };
