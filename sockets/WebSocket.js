@@ -1,4 +1,4 @@
-var Socket = require("./Socket");
+const Socket = require("./Socket");
 
 module.exports = class WebSocket extends Socket {
 	constructor(nativeSocket, req) {
@@ -10,15 +10,11 @@ module.exports = class WebSocket extends Socket {
 		this.port = address.port;
 
 		this.nativeSocket = nativeSocket;
-	}
-
-	onDataReceived(callback) {
-		this.nativeSocket.on('message', callback);
-	}
-
-	onDisconnect(callback) {
+		this.nativeSocket.on('message', (message) => {
+			this.emit('message', message);
+		});
 		this.nativeSocket.on('close', () => {
-			callback();
+			this.emit('disconnect');
 		});
 	}
 

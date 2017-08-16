@@ -1,10 +1,14 @@
-var wss = require("ws");
-var net = require("net");
-var TCPSocket = require("./TCPSocket");
-var WebSocket = require("./WebSocket");
+const wss = require("ws");
+const net = require("net");
+const TCPSocket = require("./TCPSocket");
+const WebSocket = require("./WebSocket");
+const Discord = require("discord.io");
+const EventEmitter = require('events');
 
-module.exports = class Server {
+module.exports = class Server extends EventEmitter {
 	constructor(options) {
+		super();
+
 		this.options = options;
 
 		this.websocketServer = new wss.Server({
@@ -13,21 +17,24 @@ module.exports = class Server {
 
 		this.tcpServer = new net.createServer();
 		this.tcpServer.listen(options.ports.tcp, options.subnetMask);
-	}
 
-	/**
-	 * Called when a socket connects to the server.
-	 * @param callback A callback function that takes a Socket for an argument.
-	 */
-	onConnection(callback) {
+		let bot = this.bot = new Discord.Client({
+			token: options.botToken,
+			autorun: true
+		});
+
+		bot.on('ready', function() {
+			console.log('Ready! %s - %s', bot.username, bot.id);
+		});
+
 		this.tcpServer.on('connection', (s) => {
 			let socket = new TCPSocket(s);
-			callback(socket);
+			this.emit('connect', socket);
 		});
 
 		this.websocketServer.on('connection', (ws, req) => {
 			let socket = new WebSocket(ws, req || ws.upgradeReq);
-			callback(socket);
+			this.emit('connect', socket);
 		});
 	}
 };

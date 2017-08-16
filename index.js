@@ -1,33 +1,24 @@
-var Discord = require("discord.io");
-var Server = require("./sockets/Server");
-var Socket = require("./sockets/Socket");
+const Server = require("./sockets/Server");
 
-var bot = new Discord.Client({
-	token: process.argv[2],
-	autorun: true
-});
-
-bot.on('ready', function() {
-	console.log('Ready! %s - %s', bot.username, bot.id);
-});
-
-var server = new Server({
+let server = new Server({
 	ports: {
 		websocket: 28069,
 		tcp: 42069
 	},
-	subnetMask: '0.0.0.0'
+	subnetMask: '0.0.0.0',
+	botToken: process.argv[2]
 });
-server.onConnection((socket) => {
+
+server.on('connect', (socket) => {
 	console.log("Connection from socket type " + socket.socketType());
 	console.log("  Address: " + socket.address);
 	console.log("  Port: " + socket.port);
 
-	socket.onDataReceived((data) => {
+	socket.on('message', (data) => {
     	console.log("Received Data: " + data);
 	});
 	
-	socket.onDisconnect(() => {
+	socket.on('disconnect', () => {
 		console.log("Connection disconnected.");
 		console.log("  Address: " + socket.address);
 		console.log("  Port: " + socket.port);

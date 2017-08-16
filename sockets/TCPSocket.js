@@ -1,4 +1,4 @@
-var Socket = require("./Socket");
+const Socket = require("./Socket");
 
 module.exports = class TCPSocket extends Socket {
 	constructor(nativeSocket) {
@@ -10,15 +10,11 @@ module.exports = class TCPSocket extends Socket {
 		this.port = address.port;
 
 		this.nativeSocket = nativeSocket;
-	}
-
-	onDataReceived(callback) {
-		this.nativeSocket.on('data', callback);
-	}
-
-	onDisconnect(callback) {
+		this.nativeSocket.on('data', (data) => {
+			this.emit('message', data);
+		});
 		this.nativeSocket.on('end', () => {
-			callback();
+			this.emit('disconnect');
 		});
 	}
 
