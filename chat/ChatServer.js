@@ -11,7 +11,7 @@ module.exports = class ChatServer extends EventEmitter {
 
 		let bot = this.bot = new Discord.Client();
 		bot.on('ready', function() {
-			console.log('Ready! %s - %s', bot.username, bot.id);
+			console.log('Ready! %s#%s - %s', bot.user.username, bot.user.discriminator, bot.user.id);
 		});
 		bot.login(options.bot.token).catch((e) => {
 			console.error(e.message);
