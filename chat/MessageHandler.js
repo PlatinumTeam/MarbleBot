@@ -7,8 +7,7 @@ module.exports = class MessageHandler extends EventEmitter {
 
 		this.on('IDENTIFY', (client, words, data) => {
 			client.username = data;
-
-			client.send()
+			client.emit('logged');
 		});
 		this.on('KEY', (client, words, data) => {
 
