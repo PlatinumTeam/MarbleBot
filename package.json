@@ -4,7 +4,7 @@
   "description": "MarbleBlast.com Discord integration bot",
   "main": "index.js",
   "dependencies": {
-    "discord.io": "^2.5.1",
+    "discord.js": "^11.1.0",
     "ws": "^3.1.0"
   },
   "devDependencies": {},

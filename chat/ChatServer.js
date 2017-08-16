@@ -1,20 +1,20 @@
 const EventEmitter = require('events');
 const Server = require("../sockets/Server");
-const Discord = require("discord.io");
+const Discord = require("discord.js");
 
 module.exports = class ChatServer extends EventEmitter {
 	constructor(options) {
 		super();
+		this.options = options;
 
 		let server = this.server = new Server(options.server);
 
-		let bot = this.bot = new Discord.Client({
-			token: options.botToken,
-			autorun: true
-		});
-
+		let bot = this.bot = new Discord.Client();
 		bot.on('ready', function() {
 			console.log('Ready! %s - %s', bot.username, bot.id);
+		});
+		bot.login(options.bot.token).catch((e) => {
+			console.error(e.message);
 		});
 
 		server.on('connect', (socket) => {
