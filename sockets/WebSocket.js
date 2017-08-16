@@ -21,4 +21,8 @@ module.exports = class WebSocket extends Socket {
 	socketType() {
 		return "WebSocket";
 	}
+
+	send(data) {
+		//TODO
+	}
 };

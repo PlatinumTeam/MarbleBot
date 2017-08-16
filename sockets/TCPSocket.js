@@ -21,4 +21,8 @@ module.exports = class TCPSocket extends Socket {
 	socketType() {
 		return "TCPSocket";
 	}
+
+	send(data) {
+		//TODO
+	}
 };
