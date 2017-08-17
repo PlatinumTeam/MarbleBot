@@ -17,7 +17,7 @@ module.exports = class MessageHandler extends EventEmitter {
 			}
 
 			this.on(event, (client, words, data) => {
-				commandDictionary[event].handle(client, words, data);
+				commandDictionary[event].handle(client, commandDictionary[event].parse(words, data));
 			});
 		}
 	}

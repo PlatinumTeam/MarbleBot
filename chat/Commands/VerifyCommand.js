@@ -1,5 +1,8 @@
-module.exports = class VerifyCommand {
-	static handle(client, words, data) {
+module.exports = {
+	parse: (words, data) => {
+
+	},
+	handle: (client, parsed) => {
 
 	}
 };

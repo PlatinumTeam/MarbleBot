@@ -1,6 +1,11 @@
-module.exports = class IdentifyCommand {
-	static handle(client, words, data) {
-		client.username = data;
+module.exports = {
+	parse: (words, data) => {
+		return {
+			username: data
+		};
+	},
+	handle: (client, parsed) => {
+		client.username = parsed.username;
 		client.emit('logged');
 	}
 };

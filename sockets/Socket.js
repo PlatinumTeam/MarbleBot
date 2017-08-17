@@ -9,10 +9,10 @@ module.exports = class Socket extends EventEmitter {
 	}
 
 	socketType() {
-		throw Error("Unimplemented");
+		throw new Error("Unimplemented");
 	}
 
 	send(data) {
-		throw Error("Unimplemented");
+		throw new Error("Unimplemented");
 	}
 };
