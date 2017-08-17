@@ -23,6 +23,6 @@ module.exports = class WebSocket extends Socket {
 	}
 
 	send(data) {
-		//TODO
+		this.nativeSocket.send(data);
 	}
 };

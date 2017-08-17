@@ -11,7 +11,8 @@ module.exports = class TCPSocket extends Socket {
 
 		this.nativeSocket = nativeSocket;
 		this.nativeSocket.on('data', (data) => {
-			this.emit('message', data);
+			let str = data.toString('utf8');
+			this.emit('message', str);
 		});
 		this.nativeSocket.on('end', () => {
 			this.emit('disconnect');
@@ -23,6 +24,6 @@ module.exports = class TCPSocket extends Socket {
 	}
 
 	send(data) {
-		//TODO
+		this.nativeSocket.write(data);
 	}
 };

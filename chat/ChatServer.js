@@ -39,6 +39,7 @@ module.exports = class ChatServer extends EventEmitter {
 				});
 
 				console.log("Received Data: " + data);
+				socket.send(data);
 			});
 
 			socket.on('disconnect', () => {
