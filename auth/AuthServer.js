@@ -15,7 +15,7 @@ var scopes = ['identify', 'email', /* 'connections', (it is currently broken) */
 
 passport.use(new Strategy({
 	clientID: '346803209295364102',
-	clientSecret: 'd31nwVj3BtmB0AqsdUT0aD0no0fphK3v',
+	clientSecret: process.argv[2],
 	callbackURL: 'http://localhost:5000/callback',
 	scope: scopes
 }, function(accessToken, refreshToken, profile, done) {
