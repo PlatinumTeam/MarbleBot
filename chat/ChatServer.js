@@ -12,6 +12,7 @@ module.exports = class ChatServer extends EventEmitter {
 		let messageHandler = this.messageHandler = new MessageHandler(this);
 		let server = this.server = new Server(options.server);
 		let bot = this.bot = new Discord.Client();
+		let clients = this.clients = [];
 
 		bot.on('ready', () => {
 			console.log('Ready! %s#%s - %s', bot.user.username, bot.user.discriminator, bot.user.id);
@@ -21,7 +22,9 @@ module.exports = class ChatServer extends EventEmitter {
 		});
 
 		server.on('connect', (socket) => {
-			let client = new Client(server, socket);
+			let client = new Client(this, socket);
+
+			clients.push(client);
 
 			console.log("Connection from socket type " + socket.socketType());
 			console.log("  Address: " + socket.address);
@@ -39,18 +42,35 @@ module.exports = class ChatServer extends EventEmitter {
 				});
 
 				console.log("Received Data: " + data);
-				socket.send(data);
 			});
 
 			socket.on('disconnect', () => {
+				//Remove from clients list if it exists
+				let index = clients.indexOf(client);
+				if (index !== -1) {
+					clients.splice(index, 1);
+				}
+
 				console.log("Connection disconnected.");
 				console.log("  Address: " + socket.address);
 				console.log("  Port: " + socket.port);
 			});
 		});
 
-		this.on('chat', (client, message) => {
-			bot.sendMessage(options.bot.channel, client.username + ': ' + data);
+		this.on('notify', (info) => {
+
+		});
+
+		this.on('chat', (info) => {
+			clients.forEach(function(client) {
+				client.emit('chat', info);
+			});
+			let channel = bot.channels.get(options.bot.channel);
+			channel.send(info.sender.username + ': ' + info.message).then((message) => {
+				//
+			}).catch((e) => {
+				console.error(e.message);
+			});
 		});
 	}
 };
