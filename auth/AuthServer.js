@@ -1,7 +1,11 @@
+// Example Code from https://github.com/nicholastay/passport-discord
+// License: ISC
+// Copyright Nicholas Tay 2017
+
 var express  = require('express')
 	, session  = require('express-session')
 	, passport = require('passport')
-	, Strategy = require('../lib').Strategy
+	, Strategy = require('passport-discord').Strategy
 	, app      = express();
 
 passport.serializeUser(function(user, done) {
@@ -11,7 +15,7 @@ passport.deserializeUser(function(obj, done) {
 	done(null, obj);
 });
 
-var scopes = ['identify', 'email', /* 'connections', (it is currently broken) */ 'guilds', 'guilds.join'];
+var scopes = ['identify'];
 
 passport.use(new Strategy({
 	clientID: '346803209295364102',
@@ -44,12 +48,10 @@ app.get('/info', checkAuth, function(req, res) {
 	res.json(req.user);
 });
 
-
 function checkAuth(req, res, next) {
 	if (req.isAuthenticated()) return next();
 	res.send('not logged in :(');
 }
-
 
 app.listen(5000, function (err) {
 	if (err) return console.log(err)
