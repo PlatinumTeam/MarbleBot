@@ -168,6 +168,20 @@ module.exports = class ChatServer extends EventEmitter {
 			//TODO: Webchat username resolve?
 			return '@' + nickname;
 		});
+		message = message.replace(CHANNEL_MENTION_REGEX, (match, channelId, offset, string) => {
+			//Look up the user's nickname
+			let guild = this.bot.guilds.get(this.options.bot.server);
+			let channel = guild.channels.get(channelId);
+			return '#' + channel.name;
+		});
+		message = message.replace(ROLE_MENTION_REGEX, (match, roleId, offset, string) => {
+			//Look up the user's nickname
+			let guild = this.bot.guilds.get(this.options.bot.server);
+			let role = guild.roles.get(roleId);
+			return '@' + role.name;
+		});
+
+		//TODO: Emoji?
 
 		return message;
 	}
