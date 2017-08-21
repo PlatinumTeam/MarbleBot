@@ -40,6 +40,8 @@ module.exports = class Client extends EventEmitter {
 			//Get some info
 			this.userId = info.id;
 			this.display = info.display;
+
+			//If we have a discord account connected then keep track of it
 			if (info.discord) {
 				this.discordId = info.discordId;
 				this.sendMessage('DISCORD', 1);
@@ -47,8 +49,11 @@ module.exports = class Client extends EventEmitter {
 				this.discordId = 0;
 				this.sendMessage('DISCORD', 0);
 			}
-			this.server.sendMessage('login');
+
+			//Tell the server we've logged in so it can update userlists
+			this.server.emit('login');
 		} else {
+			//Password was wrong or the site's down. Either way we can't get in
 			this.sendMessage('IDENTIFY', 'INVALID');
 			this._disconnect('Login failure');
 		}

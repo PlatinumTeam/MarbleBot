@@ -5,6 +5,7 @@ commandDictionary['KEY'] = require('./Commands/KeyCommand');
 commandDictionary['CHAT'] = require('./Commands/ChatCommand');
 
 const messageDictionary = {};
+messageDictionary['INVALID'] = require('./Messages/InvalidMessage');
 messageDictionary['LOGGED'] = require('./Messages/LoggedMessage');
 messageDictionary['IDENTIFY'] = require('./Messages/IdentifyMessage');
 messageDictionary['CHAT'] = require('./Messages/ChatMessage');
@@ -12,6 +13,9 @@ messageDictionary['DISCORD'] = require('./Messages/DiscordMessage');
 
 module.exports = {
 	sendCommand: (command, client, words, data) => {
+		if (commandDictionary[command] === undefined) {
+			throw new Error("Unknown command " + command);
+		}
 		// Make sure handle and parse are functions.
 		if (commandDictionary[command].handle === undefined) {
 			throw new Error("Command " + command + " does not have a 'handle' function definition.");
@@ -23,14 +27,14 @@ module.exports = {
 		commandDictionary[command].handle(client, commandDictionary[command].parse(words, data));
 	},
 	sendMessage: (client, message, data) => {
-		// Make sure handle and parse are functions.
-		if (messageDictionary[message].handle === undefined) {
-			throw new Error("Command " + message + " does not have a 'handle' function definition.");
+		if (messageDictionary[message] === undefined) {
+			throw new Error("Unknown message " + message);
 		}
-		if (messageDictionary[message].parse === undefined) {
-			throw new Error("Command " + message + " does not have a 'parse' function definition.");
+		// Make sure handle and parse are functions.
+		if (messageDictionary[message].send === undefined) {
+			throw new Error("Message " + message + " does not have a 'send' function definition.");
 		}
 
-		messageDictionary[message].handle(client, data);
+		messageDictionary[message].send(client, data);
 	}
 };

@@ -12,6 +12,9 @@ module.exports = {
 		//Mark the message as ours
 		parsed.sender = client;
 
-		client.server.emit('chat', parsed);
+		client.server.emit('chat', {
+			type: 'webchat',
+			data: parsed
+		});
 	}
 };
