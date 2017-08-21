@@ -91,6 +91,17 @@ module.exports = class ChatServer extends EventEmitter {
 						access: 0,
 						message: info.data.content
 					};
+
+					let attachments = info.data.attachments;
+					attachments.keyArray().forEach(function(attachId) {
+						let attachment = attachments.get(attachId);
+						if (messageData.message.length > 0) {
+							messageData.message += ' ' + attachment.url;
+						} else {
+							messageData.message = attachment.url;
+						}
+					});
+
 					break;
 				case 'webchat':
 					messageData = {
