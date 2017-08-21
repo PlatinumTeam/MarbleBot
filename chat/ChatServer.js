@@ -89,19 +89,24 @@ module.exports = class ChatServer extends EventEmitter {
 						display: info.data.member.nickname || info.data.author.username,
 						destination: '', //Always global
 						access: 0,
-						message: info.data.content
+						converted: info.data.content,
+						message: this._deconvertMessage(info.data.content)
 					};
 
+					//If they attached any files add them to the end of the message
 					let attachments = info.data.attachments;
+
+					//This supports multiple attachments even though the Discord client
+					// can only upload one at a time.
 					attachments.keyArray().forEach(function(attachId) {
 						let attachment = attachments.get(attachId);
+						//Append to the message if it has any text
 						if (messageData.message.length > 0) {
 							messageData.message += ' ' + attachment.url;
 						} else {
 							messageData.message = attachment.url;
 						}
 					});
-
 					break;
 				case 'webchat':
 					messageData = {
@@ -109,7 +114,8 @@ module.exports = class ChatServer extends EventEmitter {
 						display: info.data.sender.display,
 						destination: info.data.destination,
 						access: 0,
-						message: info.data.message
+						message: info.data.message,
+						converted: this._convertMessage(info.data.message)
 					};
 					break;
 			}
@@ -128,5 +134,48 @@ module.exports = class ChatServer extends EventEmitter {
 				});
 			}
 		});
+	}
+
+	/**
+	 * Convert <@mentions> to @mentions in a message
+	 */
+	_deconvertMessage(message) {
+		// <@userid> - user mention, convert to @User
+		// <@!userid> - user mention with nickname, convert to @Nickname
+		// <#channelid> - channel mention, convert to #channel
+		// <@&roleid> - role mention, convert to @role
+		// <:emoji:emojiid> - custom emoji, ??????
+
+		const USER_MENTION_REGEX    = /<@(\d+)>/g;
+		const NICK_MENTION_REGEX    = /<@!(\d+)>/g;
+		const CHANNEL_MENTION_REGEX = /<#(\d+)>/g;
+		const ROLE_MENTION_REGEX    = /<@&(\d+)>/g;
+		const EMOJI_MENTION_REGEX   = /<:[a-zA-Z0-9_]+:(\d+)>/g;
+
+		message = message.replace(USER_MENTION_REGEX, (match, userId, offset, string) => {
+			//Look up the user's nickname
+			let guild = this.bot.guilds.get(this.options.bot.server);
+			let member = guild.members.get(userId);
+			let nickname = member.nickname || member.user.username;
+			//TODO: Webchat username resolve?
+			return '@' + nickname;
+		});
+		message = message.replace(NICK_MENTION_REGEX, (match, userId, offset, string) => {
+			//Look up the user's nickname
+			let guild = this.bot.guilds.get(this.options.bot.server);
+			let member = guild.members.get(userId);
+			let nickname = member.nickname || member.user.username;
+			//TODO: Webchat username resolve?
+			return '@' + nickname;
+		});
+
+		return message;
+	}
+
+	/**
+	 * Convert @mentions to <@mentions> in a message
+	 */
+	_convertMessage(message) {
+
 	}
 };
