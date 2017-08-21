@@ -1,27 +1,36 @@
-const EventEmitter = require('events');
-
 const commandDictionary = {};
 commandDictionary['IDENTIFY'] = require('./Commands/IdentifyCommand');
-commandDictionary['CHAT'] = require('./Commands/ChatCommand');
 commandDictionary['VERIFY'] = require('./Commands/VerifyCommand');
+commandDictionary['KEY'] = require('./Commands/KeyCommand');
+commandDictionary['CHAT'] = require('./Commands/ChatCommand');
 
-module.exports = class MessageHandler extends EventEmitter {
-	constructor(server) {
-		super();
-		this.server = server;
+const messageDictionary = {};
+messageDictionary['LOGGED'] = require('./Messages/LoggedMessage');
+messageDictionary['IDENTIFY'] = require('./Messages/IdentifyMessage');
+messageDictionary['CHAT'] = require('./Messages/ChatMessage');
+messageDictionary['DISCORD'] = require('./Messages/DiscordMessage');
 
-		for (let event in commandDictionary) {
-			// Make sure handle and parse are functions.
-			if (commandDictionary[event].handle === undefined) {
-				throw new Error("Event " + event + " does not have a 'handle' function definition.");
-			}
-			if (commandDictionary[event].parse === undefined) {
-				throw new Error("Event " + event + " does not have a 'parse' function definition.");
-			}
-
-			this.on(event, (client, words, data) => {
-				commandDictionary[event].handle(client, commandDictionary[event].parse(words, data));
-			});
+module.exports = {
+	sendCommand: (command, client, words, data) => {
+		// Make sure handle and parse are functions.
+		if (commandDictionary[command].handle === undefined) {
+			throw new Error("Command " + command + " does not have a 'handle' function definition.");
 		}
+		if (commandDictionary[command].parse === undefined) {
+			throw new Error("Command " + command + " does not have a 'parse' function definition.");
+		}
+
+		commandDictionary[command].handle(client, commandDictionary[command].parse(words, data));
+	},
+	sendMessage: (client, message, data) => {
+		// Make sure handle and parse are functions.
+		if (messageDictionary[message].handle === undefined) {
+			throw new Error("Command " + message + " does not have a 'handle' function definition.");
+		}
+		if (messageDictionary[message].parse === undefined) {
+			throw new Error("Command " + message + " does not have a 'parse' function definition.");
+		}
+
+		messageDictionary[message].handle(client, data);
 	}
 };

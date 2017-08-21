@@ -15,4 +15,8 @@ module.exports = class Socket extends EventEmitter {
 	send(data) {
 		throw new Error("Unimplemented");
 	}
+
+	disconnect() {
+		throw new Error("Unimplemented");
+	}
 };

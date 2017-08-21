@@ -25,4 +25,8 @@ module.exports = class WebSocket extends Socket {
 	send(data) {
 		this.nativeSocket.send(data);
 	}
+
+	disconnect(reason) {
+		this.nativeSocket.terminate();
+	}
 };

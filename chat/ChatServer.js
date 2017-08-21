@@ -9,7 +9,6 @@ module.exports = class ChatServer extends EventEmitter {
 		super();
 		this.options = options;
 
-		let messageHandler = this.messageHandler = new MessageHandler(this);
 		let server = this.server = new Server(options.server);
 		let bot = this.bot = new Discord.Client();
 		let clients = this.clients = [];
@@ -38,7 +37,7 @@ module.exports = class ChatServer extends EventEmitter {
 					//First word is the message type, rest is the contents
 					let words = line.split(' ');
 					let command = words.splice(0, 1).join(' '); //Get first word and chop off from the rest
-					messageHandler.emit(command, client, words, words.join(' '));
+					MessageHandler.sendCommand(command, client, words, words.join(' '));
 				});
 
 				console.log("Received Data: " + data);
@@ -63,7 +62,7 @@ module.exports = class ChatServer extends EventEmitter {
 
 		this.on('chat', (info) => {
 			clients.forEach(function(client) {
-				client.emit('chat', info);
+				client.sendMessage('chat', info);
 			});
 			let channel = bot.channels.get(options.bot.channel);
 			channel.send(info.sender.username + ': ' + info.message).then((message) => {

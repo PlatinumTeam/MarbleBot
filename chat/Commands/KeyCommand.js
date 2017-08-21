@@ -1,10 +1,10 @@
 module.exports = {
 	parse: (words, data) => {
 		return {
-			username: data
+			key: data
 		};
 	},
 	handle: (client, parsed) => {
-		client.username = parsed.username;
+		client.keyLogin(parsed.key);
 	}
 };

@@ -26,4 +26,8 @@ module.exports = class TCPSocket extends Socket {
 	send(data) {
 		this.nativeSocket.write(data);
 	}
+
+	disconnect(reason) {
+		this.nativeSocket.end(reason);
+	}
 };
