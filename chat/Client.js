@@ -17,6 +17,20 @@ module.exports = class Client extends EventEmitter {
 		this._socket = socket;
 
 		this._username = '';
+		this.loggedIn = false;
+
+		this.on('login', () => {
+			this.loggedIn = true;
+
+			//Start a ping timer
+			this.pingInterval = setInterval(() => {
+				this.sendMessage('PING', new Date().valueOf().toString());
+			}, 5000);
+		});
+
+		this.on('logout', () => {
+			clearInterval(this.pingInterval);
+		})
 	}
 
 	sendMessage(message, data) {
@@ -51,11 +65,12 @@ module.exports = class Client extends EventEmitter {
 			}
 
 			//Tell the server we've logged in so it can update userlists
-			this.server.emit('login');
+			this.emit('login');
+			this.server.emit('login', this);
 		} else {
 			//Password was wrong or the site's down. Either way we can't get in
 			this.sendMessage('IDENTIFY', 'INVALID');
-			this._disconnect('Login failure');
+			this.disconnect('Login failure');
 		}
 	}
 
@@ -63,7 +78,10 @@ module.exports = class Client extends EventEmitter {
 		this._socket.send(data);
 	}
 
-	_disconnect(reason) {
+	disconnect(reason) {
+		if (this.loggedIn) {
+			this.emit('logout');
+		}
 		this._socket.disconnect(reason);
 	}
 };

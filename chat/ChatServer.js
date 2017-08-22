@@ -78,6 +78,10 @@ module.exports = class ChatServer extends EventEmitter {
 
 		});
 
+		this.on('login', (client) => {
+			//Client has logged in, do something
+		});
+
 		this.on('chat', (info) => {
 			//Got a chat message, break down the info about it
 			let messageData = {};
