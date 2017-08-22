@@ -34,9 +34,17 @@ module.exports = class ChatServer extends EventEmitter {
 		});
 
 		server.on('connect', (socket) => {
+			//Connected a new client, add them to our list
 			let client = new Client(this, socket);
-
 			clients.push(client);
+
+			//Kick the client if they don't respond
+			let connectTimeout = setTimeout(() => {
+				client.disconnect('Timeout');
+			}, 10000);
+			client.on('login', () => {
+				clearTimeout(connectTimeout);
+			});
 
 			console.log("Connection from socket type " + socket.socketType());
 			console.log("  Address: " + socket.address);
@@ -80,6 +88,7 @@ module.exports = class ChatServer extends EventEmitter {
 
 		this.on('login', (client) => {
 			//Client has logged in, do something
+
 		});
 
 		this.on('chat', (info) => {

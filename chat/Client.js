@@ -24,13 +24,20 @@ module.exports = class Client extends EventEmitter {
 
 			//Start a ping timer
 			this.pingInterval = setInterval(() => {
-				this.sendMessage('PING', new Date().valueOf().toString());
-			}, 5000);
+				//Check if they got the last ping through
+				if (this.lastPing !== undefined && !this.lastPing.received) {
+					//No they didn't, they've timed out
+					this.disconnect('Timeout');
+				} else {
+					let pingData = new Date().valueOf().toString();
+					this.sendMessage('PING', pingData);
+				}
+			}, 30000);
 		});
 
 		this.on('logout', () => {
 			clearInterval(this.pingInterval);
-		})
+		});
 	}
 
 	sendMessage(message, data) {

@@ -12,6 +12,8 @@ module.exports = {
 			let time = (new Date() - client.lastPing.time) / 1000;
 			//Let them know
 			client.sendMessage('PINGTIME', time);
+
+			client.lastPing.received = true;
 		} else {
 			//How can you mess up a PING/PONG? Even my dog can do this
 			client.disconnect('Invalid ping');
