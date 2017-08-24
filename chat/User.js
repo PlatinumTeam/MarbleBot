@@ -1,4 +1,4 @@
-const https = require('https');
+const request = require("request");
 
 module.exports = class User {
 	constructor() {
@@ -18,34 +18,27 @@ module.exports = class User {
 				callback(false, {message:  "Unknown login type"});
 				return;
 		}
-		const req = https.get(requestURI, (res) => {
-			const {statusCode} = res;
-			const contentType = res.headers['content-type'];
+		request(requestURI, (error, response, body) => {
+			if (error) {
+				callback(false, {message: error.message});
+				return;
+			}
 
 			//If the page didn't work then our login didn't work either
-			if (statusCode !== 200) {
+			if (response.statusCode !== 200) {
 				callback(false, {message: 'HTTP ' + statusCode});
 				return;
 			}
 
-			//Get the response from the request
-			let rawData = '';
-			res.on('data', (chunk) => {
-				rawData += chunk;
-			});
-			res.on('end', () => {
-				try {
-					//Oh yeah, we got it
-					const parsed = JSON.parse(rawData);
-					//Tell the callback
-					callback(parsed.status, parsed);
-				} catch (error) {
-					callback(false, {message: error.message});
-				}
-			});
-		}).on('error', (error) => {
-			callback(false, {message: error.message});
-		})
+			try {
+				//Oh yeah, we got it
+				let parsed = JSON.parse(body);
+				//Tell the callback
+				callback(parsed.status, parsed);
+			} catch (error) {
+				callback(false, {message: error.message});
+			}
+		});
 	}
 
 	static fromDiscord(discordUser) {
@@ -53,33 +46,20 @@ module.exports = class User {
 		user.discordUser = discordUser;
 		let requestURI = 'https://marbleblast.com/pq/leader/api/Discord/GetUserInfo.php?discordId=' + discordUser.id;
 
-		const req = https.get(requestURI,
-			(res) => {
-			const { statusCode } = res;
-			const contentType = res.headers['content-type'];
-
-			let error;
-			if (statusCode !== 200) {
+		request(requestURI, (error, response, body) => {
+			if (response.statusCode !== 200) {
 				//Couldn't do it
-				res.resume();
 				console.log('Could not find site account for discord user id ' + discordUser.id);
 				return;
 			}
 
-			let rawData = '';
-			res.on('data', (chunk) => { rawData += chunk; });
-			res.on('end', () => {
-				try {
-					//Oh yeah, we got it
-					const parsed = JSON.parse(rawData);
-					user.siteUser = parsed;
-					console.log('Found site account for ' + discordUser.id);
-				} catch (e) {
-					console.error(e.message);
-				}
-			});
-		}).on('error', (e) => {
-			console.log(e.message);
+			try {
+				//Oh yeah, we got it
+				user.siteUser = JSON.parse(body);
+				console.log('Found site account for ' + discordUser.id);
+			} catch (e) {
+				console.error(e.message);
+			}
 		});
 	}
 };
