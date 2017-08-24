@@ -132,19 +132,36 @@ module.exports = class ChatServer extends EventEmitter {
 					};
 					break;
 			}
-			//Tell everyone on webchat even if they sent it
-			clients.forEach(function(client) {
-				client.sendMessage('CHAT', messageData);
-			});
+			if (messageData.destination === '') {
+				//Global message
 
-			//Don't send discord messages back to discord, that'd be pretty dumb
-			if (info.type !== 'discord') {
-				let channel = bot.channels.get(options.bot.channel);
-				channel.send(info.data.sender.display + ': ' + info.data.message).then((message) => {
-					//
-				}).catch((e) => {
-					console.error(e.message);
+				//Tell everyone on webchat even if they sent it
+				clients.forEach(function(client) {
+					client.sendMessage('CHAT', messageData);
 				});
+
+				//Don't send discord messages back to discord, that'd be pretty dumb
+				if (info.type !== 'discord') {
+					let channel = bot.channels.get(options.bot.channel);
+					channel.send(info.data.sender.display + ': ' + info.data.message).then((message) => {
+						//
+					}).catch((e) => {
+						console.error(e.message);
+					});
+				}
+			} else {
+				//Private message
+
+				//Send to just the client we mentioned
+				let client = clients.find((client) => {
+					return client.username === messageData.destination;
+				});
+				if (client === undefined) {
+					//TODO: Maybe they're on Discord?
+				} else {
+					//Send just that client the message
+					client.sendMessage('CHAT', messageData);
+				}
 			}
 		});
 	}
