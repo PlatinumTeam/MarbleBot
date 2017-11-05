@@ -30,7 +30,12 @@ module.exports = class Client extends EventEmitter {
 					this.disconnect('Timeout');
 				} else {
 					let pingData = new Date().valueOf().toString();
-					this.sendMessage('PING', pingData);
+					try {
+						this.sendMessage('PING', pingData);
+					} catch (e) {
+						//Threw an error in pinging, so disconnect them
+						this.disconnect('Connection error');
+					}
 				}
 			}, 30000);
 		});
