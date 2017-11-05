@@ -12,7 +12,11 @@ module.exports = class TCPSocket extends Socket {
 		this.nativeSocket = nativeSocket;
 		this.nativeSocket.on('data', (data) => {
 			let str = data.toString('utf8');
-			this.emit('message', str);
+			let messages = str.split("\n");
+			messages.forEach((message) => {
+				message = message.trim();
+				this.emit('message', message);
+			})
 		});
 		this.nativeSocket.on('end', () => {
 			this.emit('disconnect');
