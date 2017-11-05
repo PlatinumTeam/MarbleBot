@@ -122,7 +122,7 @@ module.exports = class ChatServer extends EventEmitter {
 
 					//This supports multiple attachments even though the Discord client
 					// can only upload one at a time.
-					attachments.keyArray().forEach(function(attachId) {
+					attachments.keyArray().forEach((attachId) => {
 						let attachment = attachments.get(attachId);
 						//Append to the message if it has any text
 						if (messageData.message.length > 0) {
@@ -147,7 +147,7 @@ module.exports = class ChatServer extends EventEmitter {
 				//Global message
 
 				//Tell everyone on webchat even if they sent it
-				this.clients.forEach(function(client) {
+				this.clients.forEach((client) => {
 					client.sendMessage('CHAT', messageData);
 				});
 

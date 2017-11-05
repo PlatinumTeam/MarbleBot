@@ -6,7 +6,7 @@ module.exports = {
 		client._sendRaw("USER START");
 
 		//Send all users in the user list
-		data.forEach(function (user) {
+		data.forEach((user) => {
 			let info = util.format("%s %s %s %s %s %s %s %s",
 				StringUtils.encodeName(user.username),
 				user.access,

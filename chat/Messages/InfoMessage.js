@@ -16,13 +16,13 @@ module.exports = {
 
 		//TODO: Send friends
 		//TODO: Send blocks
-		info.statuses.forEach(function(status) {
+		info.statuses.forEach((status) => {
 			client._sendRaw(util.format("STATUS %s %s", status.status, status.display));
 		});
-		info.colors.forEach(function(color) {
+		info.colors.forEach((color) => {
 			client._sendRaw(util.format("COLOR %s %s", color.ident, color.color));
 		});
-		info.flair.forEach(function(flair) {
+		info.flair.forEach((flair) => {
 			client._sendRaw(util.format("FLAIR %s", flair));
 		})
 	}

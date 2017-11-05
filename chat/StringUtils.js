@@ -1,43 +1,43 @@
 //Most of this file is straight out of Webchat utils.js
 
 //http://stackoverflow.com/a/14760377
-String.prototype.paddingLeft = function (paddingValue) {
+String.prototype.paddingLeft = (paddingValue) => {
 	return String(paddingValue + this).slice(-paddingValue.length);
 };
 
 module.exports = {
 	//Horde of Torque methods and other helpers that are super useful
-	getWord: function(text, word) {
+	getWord: (text, word) => {
 		if (text === null) return text;
 		return text.split(" ")[word];
 	},
-	getWordCount: function(text) {
+	getWordCount: (text) => {
 		if (text === null) return text;
 		return text.split(" ").length;
 	},
-	getWords: function(text, start, end) {
+	getWords: (text, start, end) => {
 		if (text === null) return text;
 		if (typeof(end) === "undefined")
 			end = getWordCount(text);
 		return text.split(" ").slice(start, end + 1).join(" ");
 	},
-	firstWord: function(text) {
+	firstWord: (text) => {
 		if (text === null) return text;
 		return getWord(text, 0);
 	},
-	restWords: function(text) {
+	restWords: (text) => {
 		if (text === null) return text;
 		return getWords(text, 1, getWordCount(text));
 	},
-	decodeName: function(text) {
+	decodeName: (text) => {
 		if (text === null) return text;
 		return text.replace(/-SPC-/g, " ").replace(/-TAB-/g, "\t").replace(/-NL-/g, "\n");
 	},
-	encodeName: function(text) {
+	encodeName: (text) => {
 		if (text === null) return text;
 		return text.replace(/ /g, "-SPC-").replace(/\t/g, "-TAB-").replace(/\n/g, "-NL-");
 	},
-	htmlDecode: function(text) {
+	htmlDecode: (text) => {
 		if (text === null) return text;
 		//The server replaces spaces with + symbols because of issues with spaces.
 		// We also need to encode all bare % symbols (with no numbers following) because
@@ -61,7 +61,7 @@ module.exports = {
 			.replace(/</g, "&lt;");
 		return decoded;
 	},
-	formatTime: function(time) {
+	formatTime: (time) => {
 		let isNeg = (time < 0);
 		time = Math.abs(time);
 
@@ -72,7 +72,7 @@ module.exports = {
 
 		return minutes + ":" + seconds + "." + millis;
 	},
-	upperFirst: function(str) {
+	upperFirst: (str) => {
 		if (str === null) return str;
 		return str[0].toUpperCase() + str.substring(1);
 	}
