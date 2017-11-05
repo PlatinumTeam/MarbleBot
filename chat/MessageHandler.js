@@ -16,6 +16,7 @@ messageDictionary['PING'] = require('./Messages/PingMessage');
 messageDictionary['PONG'] = require('./Messages/PongMessage');
 messageDictionary['PINGTIME'] = require('./Messages/PingTimeMessage');
 messageDictionary['USERLIST'] = require('./Messages/UserlistMessage');
+messageDictionary['INFO'] = require('./Messages/InfoMessage');
 
 module.exports = {
 	sendCommand: (command, client, words, data) => {

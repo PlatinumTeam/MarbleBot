@@ -98,6 +98,8 @@ module.exports = class ChatServer extends EventEmitter {
 
 			//Send them the userlist
 			client.sendUserlist(this.getUserlist());
+			//Send them the info
+			client.sendInfo(this.info);
 		});
 
 		this.on('chat', (info) => {
