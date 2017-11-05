@@ -11,6 +11,6 @@ let server = new ChatServer({
 	bot: {
 		token: process.argv[2],
 		server: '346034549962047488',
-		channel: '346057074863636484'
+		channel: '376839367609548800'
 	}
 });
