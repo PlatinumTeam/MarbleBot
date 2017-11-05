@@ -30,10 +30,16 @@ module.exports = class User {
 				return;
 			}
 
+			let parsed = null;
 			try {
 				//Oh yeah, we got it
-				let parsed = JSON.parse(body);
+				parsed = JSON.parse(body);
+			} catch (error) {
+				callback(false, {message: error.message});
+				return;
+			}
 
+			if (parsed) {
 				if (!parsed.status) {
 					callback(parsed.status, parsed);
 					return;
@@ -48,8 +54,6 @@ module.exports = class User {
 
 				//Get their info
 				this.getUserInfo(user, callback);
-			} catch (error) {
-				callback(false, {message: error.message});
 			}
 		});
 	}
@@ -79,10 +83,16 @@ module.exports = class User {
 				return;
 			}
 
+			let parsed = null;
 			try {
 				//Oh yeah, we got it
-				let parsed = JSON.parse(body);
+				parsed = JSON.parse(body);
+			} catch (error) {
+				callback(false, {message: error.message});
+				return;
+			}
 
+			if (parsed) {
 				if (!parsed.status) {
 					callback(parsed.status, parsed);
 					return;
@@ -91,8 +101,6 @@ module.exports = class User {
 				//We're good
 				user.info = parsed;
 				callback(true, user);
-			} catch (error) {
-				callback(false, {message: error.message});
 			}
 		});
 	}
