@@ -1,4 +1,5 @@
 const EventEmitter = require('events');
+const request = require('request');
 const Server = require("../sockets/Server");
 const Discord = require("discord.js");
 const Client = require("./Client");
@@ -9,14 +10,18 @@ module.exports = class ChatServer extends EventEmitter {
 		super();
 		this.options = options;
 
-		let server = this.server = new Server(options.server);
+		this._getServerInfo(this._infoCallback.bind(this));
+	}
+
+	startServers() {
+		let server = this.server = new Server(this.options.server);
 		let bot = this.bot = new Discord.Client();
 		let clients = this.clients = [];
 
 		bot.on('ready', () => {
 			console.log('Ready! %s#%s - %s', bot.user.username, bot.user.discriminator, bot.user.id);
 		});
-		bot.login(options.bot.token).catch((e) => {
+		bot.login(this.options.bot.token).catch((e) => {
 			console.error(e.message);
 		});
 
@@ -25,7 +30,7 @@ module.exports = class ChatServer extends EventEmitter {
 			if (message.author.id === bot.user.id || message.author.bot) {
 				return;
 			}
-			if (message.channel.id === options.bot.channel) {
+			if (message.channel.id === this.options.bot.channel) {
 				this.emit('chat', {
 					type: 'discord',
 					data: message
@@ -81,7 +86,9 @@ module.exports = class ChatServer extends EventEmitter {
 				console.log("  Port: " + socket.port);
 			});
 		});
+	}
 
+	registerHandlers() {
 		this.on('notify', (info) => {
 
 		});
@@ -138,13 +145,13 @@ module.exports = class ChatServer extends EventEmitter {
 				//Global message
 
 				//Tell everyone on webchat even if they sent it
-				clients.forEach(function(client) {
+				this.clients.forEach(function(client) {
 					client.sendMessage('CHAT', messageData);
 				});
 
 				//Don't send discord messages back to discord, that'd be pretty dumb
 				if (info.type !== 'discord') {
-					let channel = bot.channels.get(options.bot.channel);
+					let channel = this.bot.channels.get(this.options.bot.channel);
 					channel.send(info.data.sender.display + ': ' + info.data.message).then((message) => {
 						//
 					}).catch((e) => {
@@ -155,7 +162,7 @@ module.exports = class ChatServer extends EventEmitter {
 				//Private message
 
 				//Send to just the client we mentioned
-				let client = clients.find((client) => {
+				let client = this.clients.find((client) => {
 					return client.username === messageData.destination;
 				});
 				if (client === undefined) {
@@ -181,6 +188,43 @@ module.exports = class ChatServer extends EventEmitter {
 				suffix: client.user.info.titles.suffix,
 			};
 		});
+	}
+
+	_getServerInfo(callback) {
+		let requestURI = "https://marbleblast.com/pq/leader/api/Discord/ServerInfo.php";
+		request(requestURI, (error, response, body) => {
+			if (error) {
+				callback(false, {message: error.message});
+				return;
+			}
+			if (response.statusCode !== 200) {
+				callback(false, {message: 'HTTP ' + statusCode});
+				return;
+			}
+			let parsed = null;
+			try {
+				parsed = JSON.parse(body);
+			} catch (error) {
+				callback(false, {message: error.message});
+				return;
+			}
+			if (parsed) {
+				callback(true, parsed);
+			}
+		});
+	}
+
+	_infoCallback(success, info) {
+		if (!success) {
+			//RIP
+			Process.exit(1);
+			return;
+		}
+
+		//We're good to start
+		this.info = info;
+		this.startServers();
+		this.registerHandlers();
 	}
 
 	/**
