@@ -5,6 +5,7 @@ commandDictionary['KEY'] = require('./Commands/KeyCommand');
 commandDictionary['CHAT'] = require('./Commands/ChatCommand');
 commandDictionary['PING'] = require('./Commands/PingCommand');
 commandDictionary['PONG'] = require('./Commands/PongCommand');
+commandDictionary['LOCATION'] = require('./Commands/LocationCommand');
 
 const messageDictionary = {};
 messageDictionary['INVALID'] = require('./Messages/InvalidMessage');
@@ -17,6 +18,7 @@ messageDictionary['PONG'] = require('./Messages/PongMessage');
 messageDictionary['PINGTIME'] = require('./Messages/PingTimeMessage');
 messageDictionary['USERLIST'] = require('./Messages/UserlistMessage');
 messageDictionary['INFO'] = require('./Messages/InfoMessage');
+messageDictionary['NOTIFY'] = require('./Messages/NotifyMessage');
 
 module.exports = {
 	sendCommand: (command, client, words, data) => {

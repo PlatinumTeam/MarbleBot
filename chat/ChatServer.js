@@ -177,12 +177,18 @@ module.exports = class ChatServer extends EventEmitter {
 		});
 	}
 
+	notifyAll(info) {
+		this.clients.forEach((client) => {
+			client.sendMessage('NOTIFY', info);
+		});
+	}
+
 	getUserlist() {
 		return this.clients.map((client) => {
 			return {
 				username: client.username,
 				access: client.user.info.access,
-				location: "", //TODO: Location
+				location: client.location,
 				display: client.display,
 				color: client.user.info.colorValue,
 				flair: client.user.info.titles.flair,

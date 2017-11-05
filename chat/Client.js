@@ -15,6 +15,7 @@ module.exports = class Client extends EventEmitter {
 
 		this.server = server;
 		this._socket = socket;
+		this.location = 0;
 
 		this._username = '';
 		this.loggedIn = false;
