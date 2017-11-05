@@ -58,28 +58,28 @@ module.exports = class Client extends EventEmitter {
 		this.sendMessage("INFO", info);
 	}
 
-	passwordLogin(password) {
-		User.checkLogin(this.username, password, 'password', this._loginCallback.bind(this));
+	passwordLogin(info) {
+		User.checkLogin(this.username, info, 'password', this._loginCallback.bind(this));
 	}
 
 	keyLogin(key) {
 		User.checkLogin(this.username, key, 'key', this._loginCallback.bind(this));
 	}
 
-	_loginCallback(status, user) {
+	_loginCallback(status, info) {
 		if (status) {
 			//Login was successful, give them a success
 			this.sendMessage('IDENTIFY', 'SUCCESS');
 			this.sendMessage('LOGGED');
 
 			//Get some info
-			this.userId = user.siteUser.id;
-			this.display = user.info.display;
-			this.user = user;
+			this.userId = info.siteUser.id;
+			this.display = info.info.display;
+			this.user = info;
 
 			//If we have a discord account connected then keep track of it
-			this.discordId = user.discordUser.id;
-			if (user.discordUser.id !== 0) {
+			this.discordId = info.discordUser.id;
+			if (info.discordUser.id !== 0) {
 				this.sendMessage('DISCORD', 1);
 			} else {
 				this.sendMessage('DISCORD', 0);
@@ -89,8 +89,25 @@ module.exports = class Client extends EventEmitter {
 			this.emit('login');
 			this.server.emit('login', this);
 		} else {
+			switch (info.message) {
+				case "Out of date client":
+					//Version too low
+					this.sendMessage('IDENTIFY', 'OUTOFDATE');
+					break;
+				case "Login failed":
+				case "Unknown discord user":
+				case "Unknown user":
+				case "Unknown login type":
+				case "No accounts for user":
+					//Some sort of client error
+					this.sendMessage('IDENTIFY', 'INVALID');
+					break;
+				default:
+					//Server error probably
+					this.sendMessage('IDENTIFY', 'INVALID');
+					break;
+			}
 			//Password was wrong or the site's down. Either way we can't get in
-			this.sendMessage('IDENTIFY', 'INVALID');
 			this.disconnect('Login failure');
 		}
 	}

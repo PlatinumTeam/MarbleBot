@@ -9,7 +9,7 @@ module.exports = {
 		};
 	},
 	handle: (client, parsed) => {
-		//TODO: Check server version
-		client.passwordLogin(parsed.password);
+		//Login will check version for us
+		client.passwordLogin(parsed);
 	}
 };

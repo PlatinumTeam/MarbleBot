@@ -6,13 +6,17 @@ module.exports = class User {
 		this.discordUser = {id: 0};
 	}
 
-	static checkLogin(username, password, type, callback) {
+	static checkLogin(username, info, type, callback) {
 		//Query the site and see if we can log in
 		let requestURI = 'https://marbleblast.com/pq/leader/api/Discord/CheckLogin.php'
 			+ '?username=' + encodeURIComponent(username);
 		switch (type) {
-			case 'password': requestURI += '&password=' + encodeURIComponent(password); break;
-			case 'key': requestURI += '&key=' + encodeURIComponent(password); break;
+			case 'password':
+				requestURI += '&password=' + encodeURIComponent(info.password) + "&version=" + encodeURIComponent(info.version);
+				break;
+			case 'key':
+				requestURI += '&key=' + encodeURIComponent(info);
+				break;
 			default:
 				//Wtf type of login are you trying to do
 				callback(false, {message:  "Unknown login type"});
@@ -63,7 +67,7 @@ module.exports = class User {
 
 		//Get which account we're using for them
 		if (user.discordUser.id === 0 && user.siteUser.id === 0) {
-			callback(false, {message: "No accounts for user."});
+			callback(false, {message: "No accounts for user"});
 			return;
 		}
 		if (user.discordUser.id === 0) {
