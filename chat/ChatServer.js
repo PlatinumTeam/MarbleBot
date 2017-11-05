@@ -89,6 +89,8 @@ module.exports = class ChatServer extends EventEmitter {
 		this.on('login', (client) => {
 			//Client has logged in, do something
 
+			//Send them the userlist
+			client.sendUserlist(this.getUserlist());
 		});
 
 		this.on('chat', (info) => {
@@ -163,6 +165,21 @@ module.exports = class ChatServer extends EventEmitter {
 					client.sendMessage('CHAT', messageData);
 				}
 			}
+		});
+	}
+
+	getUserlist() {
+		return this.clients.map((client) => {
+			return {
+				username: client.username,
+				access: client.user.info.access,
+				location: "", //TODO: Location
+				display: client.display,
+				color: client.user.info.colorValue,
+				flair: client.user.info.titles.flair,
+				prefix: client.user.info.titles.prefix,
+				suffix: client.user.info.titles.suffix,
+			};
 		});
 	}
 

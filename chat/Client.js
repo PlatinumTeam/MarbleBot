@@ -44,6 +44,10 @@ module.exports = class Client extends EventEmitter {
 		MessageHandler.sendMessage(this, message, data);
 	}
 
+	sendUserlist(userlist) {
+		this.sendMessage('USERLIST', userlist);
+	}
+
 	passwordLogin(password) {
 		User.checkLogin(this.username, password, 'password', this._loginCallback.bind(this));
 	}
