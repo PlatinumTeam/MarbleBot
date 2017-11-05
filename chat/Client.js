@@ -52,22 +52,22 @@ module.exports = class Client extends EventEmitter {
 		User.checkLogin(this.username, key, 'key', this._loginCallback.bind(this));
 	}
 
-	_loginCallback(status, info) {
+	_loginCallback(status, user) {
 		if (status) {
 			//Login was successful, give them a success
 			this.sendMessage('IDENTIFY', 'SUCCESS');
 			this.sendMessage('LOGGED');
 
 			//Get some info
-			this.userId = info.id;
-			this.display = info.display;
+			this.userId = user.siteUser.id;
+			this.display = user.info.display;
+			this.user = user;
 
 			//If we have a discord account connected then keep track of it
-			if (info.discord) {
-				this.discordId = info.discordId;
+			this.discordId = user.discordUser.id;
+			if (user.discordUser.id !== 0) {
 				this.sendMessage('DISCORD', 1);
 			} else {
-				this.discordId = 0;
 				this.sendMessage('DISCORD', 0);
 			}
 
