@@ -2,6 +2,13 @@ const EventEmitter = require('events');
 const User = require('./User');
 const MessageHandler = require('./MessageHandler');
 
+LoggingStatus = {
+	LoggedOut: 1,
+	LoggingIn: 2,
+	LoginFailed: 3,
+	LoggedIn: 4,
+};
+
 module.exports = class Client extends EventEmitter {
 	get username() {
 		return this._username;
@@ -18,10 +25,10 @@ module.exports = class Client extends EventEmitter {
 		this.location = 0;
 
 		this._username = '';
-		this.loggedIn = false;
+		this.loggingStatus = LoggingStatus.LoggedOut;
 
 		this.on('login', () => {
-			this.loggedIn = true;
+			this.loggingStatus = LoggingStatus.LoggedIn;
 
 			//Start a ping timer
 			this.pingInterval = setInterval(() => {
@@ -59,18 +66,27 @@ module.exports = class Client extends EventEmitter {
 	}
 
 	passwordLogin(info) {
-		User.checkLogin(this.username, info, 'password', this._loginCallback.bind(this));
+		if (this.loggingStatus === LoggingStatus.LoggedOut) {
+			this.loggingStatus = LoggingStatus.LoggingIn;
+			User.checkLogin(this.username, info, 'password', this._loginCallback.bind(this));
+		}
 	}
 
 	keyLogin(key) {
-		User.checkLogin(this.username, key, 'key', this._loginCallback.bind(this));
+		if (this.loggingStatus === LoggingStatus.LoggedOut) {
+			this.loggingStatus = LoggingStatus.LoggingIn;
+			User.checkLogin(this.username, key, 'key', this._loginCallback.bind(this));
+		}
 	}
 
 	_loginCallback(status, info) {
+		if (this.loggingStatus !== LoggingStatus.LoggingIn) {
+			return;
+		}
+
 		if (status) {
 			//Login was successful, give them a success
 			this.sendMessage('IDENTIFY', 'SUCCESS');
-			this.sendMessage('LOGGED');
 
 			//Get some info
 			this.userId = info.siteUser.id;
@@ -88,6 +104,9 @@ module.exports = class Client extends EventEmitter {
 			//Tell the server we've logged in so it can update userlists
 			this.emit('login');
 			this.server.emit('login', this);
+
+			//Tell them we're done at the end
+			this.sendMessage('LOGGED');
 		} else {
 			switch (info.message) {
 				case "Out of date client":
@@ -107,19 +126,30 @@ module.exports = class Client extends EventEmitter {
 					this.sendMessage('IDENTIFY', 'INVALID');
 					break;
 			}
+			this.loggingStatus = LoggingStatus.LoginFailed;
 			//Password was wrong or the site's down. Either way we can't get in
 			this.disconnect('Login failure');
 		}
 	}
 
 	_sendRaw(data) {
-		this._socket.send(data);
+		try {
+			this._socket.send(data);
+		} catch (error) {
+			//Your socket is done for... RIP
+			this.disconnect('Connection error');
+		}
 	}
 
 	disconnect(reason) {
-		if (this.loggedIn) {
+		if (this.loggingStatus === LoggingStatus.LoggedIn) {
 			this.emit('logout');
 		}
-		this._socket.disconnect(reason);
+		try {
+			this._socket.disconnect(reason);
+		} catch (error) {
+			//Wow you crashed on disconnect. That's pretty bad.
+			this._socket = null;
+		}
 	}
 };
