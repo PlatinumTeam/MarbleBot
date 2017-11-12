@@ -2,7 +2,7 @@ module.exports = class DiscordUtil {
 	static getRoleColor(member) {
 		//Go down their roles until you find one that has a color
 		let sortedRoles = DiscordUtil.getSortedRoles(member);
-		for (const [roleId, role] of sortedRoles) {
+		for (const role of sortedRoles) {
 			if (role.color !== 0) {
 				let hex = role.color.toString(16);
 				if (hex.length < 6) {
@@ -18,7 +18,7 @@ module.exports = class DiscordUtil {
 	static getHoistedRoleId(member) {
 		//Go down their roles until you find one that is hoisted
 		let sortedRoles = DiscordUtil.getSortedRoles(member);
-		for (const [roleId, role] of sortedRoles) {
+		for (const role of sortedRoles) {
 			if (role.hoist) {
 				return role.id;
 			}
@@ -30,12 +30,19 @@ module.exports = class DiscordUtil {
 	/**
 	 * Get a list of a member's roles, sorted from highest priority to lowest
 	 * @param member
-	 * @returns Collection of [roleId, role]
+	 * @returns Sorted array of roles
 	 */
 	static getSortedRoles(member) {
-		return member.roles.sort((a, b) => {
-			return a.position < b.position;
+		//Need to add these to a regular array so we don't get a Discord.js collection
+		let roles = [];
+		for (const [id, role] of member.roles) {
+			roles.push(role);
+		}
+		//Sort them highest position -> lowest position
+		roles.sort((a, b) => {
+			return b.position - a.position;
 		});
+		return roles;
 	}
 
 	static formatRoleName(role) {
