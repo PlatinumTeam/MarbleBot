@@ -175,18 +175,11 @@ module.exports = class ChatServer extends EventEmitter {
 				//Global message
 
 				//Tell everyone on webchat even if they sent it
-				this.clients.forEach((client) => {
-					client.sendMessage('CHAT', messageData);
-				});
+				this.sendGameChat(messageData);
 
 				//Don't send discord messages back to discord, that'd be pretty dumb
 				if (info.type !== 'discord') {
-					let channel = this.bot.channels.get(this.options.bot.channel);
-					channel.send(info.data.sender.display + ': ' + info.data.message).then((message) => {
-						//
-					}).catch((e) => {
-						console.error(e.message);
-					});
+					this.sendDiscordChat(messageData);
 				}
 			} else {
 				//Private message
@@ -205,12 +198,43 @@ module.exports = class ChatServer extends EventEmitter {
 		});
 	}
 
+	/**
+	 * Send a notification to all player on the game server.
+	 * @param info Notification data, see NotifyMessage.js for contents
+	 */
 	notifyAll(info) {
 		this.clients.forEach((client) => {
 			client.sendMessage('NOTIFY', info);
 		});
 	}
 
+	/**
+	 * Send a chat message globally to all members connected to the game server
+	 * @param messageData Message data to send, see ChatMessage.js for contents
+	 */
+	sendGameChat(messageData) {
+		this.clients.forEach((client) => {
+			client.sendMessage('CHAT', messageData);
+		});
+	}
+
+	/**
+	 * Send a message to the global Discord channel for this bot.
+	 * @param messageData Message data to send, needs a display and message field
+	 */
+	sendDiscordChat(messageData) {
+		let channel = this.bot.channels.get(this.options.bot.channel);
+		channel.send(messageData.display + ': ' + messageData.message).then((message) => {
+			//
+		}).catch((e) => {
+			console.error(e.message);
+		});
+	}
+
+	/**
+	 * Get list of user "groups" composed of the hoisted roles that are grouped on Discord's sidebar
+	 * @returns {Array} List of groups, not in any order
+	 */
 	getGroupList() {
 		let groups = [];
 		let guild = this.bot.guilds.get(this.options.bot.server);
@@ -234,6 +258,10 @@ module.exports = class ChatServer extends EventEmitter {
 		return groups;
 	}
 
+	/**
+	 * Get full list of users online ingame and on Discord.
+	 * @returns {Array} Array of objects with user info
+	 */
 	getUserlist() {
 		let users = {};
 		let guild = this.bot.guilds.get(this.options.bot.server);
