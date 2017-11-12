@@ -52,6 +52,61 @@ module.exports = class ChatServer extends EventEmitter {
 				});
 			}
 		});
+		this.bot.on('guildMemberAdd', (member) => {
+			this.updateUserlists();
+		});
+		this.bot.on('guildMemberRemove', (member) => {
+			this.updateUserlists();
+		});
+		this.bot.on('guildMemberUpdate', (oldMember, newMember) => {
+			this.updateUserlists();
+		});
+		this.bot.on('presenceUpdate', (oldMember, newMember) => {
+			if (oldMember.presence.status === newMember.presence.status) {
+				return;
+			}
+			if (oldMember.presence.status === "offline") {
+				//Login gotta update the whole list
+				this.updateUserlists();
+				return;
+			}
+			if (newMember.presence.status === "offline") {
+				//Logout, likewise
+				this.updateUserlists();
+				return;
+			}
+
+			let location = 20; // (Discord)
+			//online
+			//offline
+			//idle
+			//dnd
+			switch (newMember.presence.status) {
+				case "offline": return;
+				case "idle":
+					location = 9; // (Away)
+					break;
+				case "dnd":
+					location = 11; // (Busy)
+					break;
+				default:
+					break;
+			}
+			let client = this.clients.find((client) => {
+				return client.user.discordUser.id === newMember.user.id;
+			});
+			if (client === undefined) {
+				this.notifyAll({
+					type: 'setlocation',
+					access: 0,
+					client: {
+						username: newMember.user.username,
+						display: newMember.nickname || newMember.user.username
+					},
+					message: location
+				});
+			}
+		});
 
 		this._connectDiscord();
 	}
@@ -74,6 +129,22 @@ module.exports = class ChatServer extends EventEmitter {
 			}, 10000);
 			client.on('login', () => {
 				clearTimeout(connectTimeout);
+				this.notifyAll({
+					type: 'login',
+					access: 0,
+					client: client,
+					message: ''
+				});
+				this.updateUserlists();
+			});
+			client.on('logout', () => {
+				this.notifyAll({
+					type: 'logout',
+					access: 0,
+					client: client,
+					message: ''
+				});
+				this.updateUserlists();
 			});
 
 			console.log("Connection from socket type " + socket.socketType());
@@ -232,6 +303,20 @@ module.exports = class ChatServer extends EventEmitter {
 	}
 
 	/**
+	 * Send the user list to all game clients on the server
+	 */
+	updateUserlists() {
+		let list = {
+			users: this.getUserlist(),
+			groups: this.getGroupList()
+		};
+		this.clients.forEach((client) => {
+			//Send them the userlist
+			client.sendUserlist(list);
+		});
+	}
+
+	/**
 	 * Get list of user "groups" composed of the hoisted roles that are grouped on Discord's sidebar
 	 * @returns {Array} List of groups, not in any order
 	 */
@@ -248,6 +333,11 @@ module.exports = class ChatServer extends EventEmitter {
 					name: DiscordUtil.formatRoleName(role.name)
 				});
 			}
+		});
+		groups.push({
+			group: 1,
+			ordering: 1,
+			name: "Ingame"
 		});
 		groups.push({
 			group: 0,
@@ -309,6 +399,9 @@ module.exports = class ChatServer extends EventEmitter {
 					users[discordId].flair = client.user.info.titles.flair;
 					users[discordId].prefix = client.user.info.titles.prefix;
 					users[discordId].suffix = client.user.info.titles.suffix;
+					if (users[discordId].group === "0") {
+						users[discordId].group = "1";
+					}
 					return;
 				}
 			}
