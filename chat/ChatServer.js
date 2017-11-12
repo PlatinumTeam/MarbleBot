@@ -4,6 +4,7 @@ const Server = require("../sockets/Server");
 const Discord = require("discord.js");
 const Client = require("./Client");
 const MessageHandler = require("./MessageHandler");
+const DiscordUtil = require("./DiscordUtil");
 
 module.exports = class ChatServer extends EventEmitter {
 	constructor(options) {
@@ -208,7 +209,7 @@ module.exports = class ChatServer extends EventEmitter {
 	}
 
 	getUserlist() {
-		return this.clients.map((client) => {
+		let userlist = this.clients.map((client) => {
 			return {
 				username: client.username,
 				access: client.user.info.access,
@@ -220,6 +221,45 @@ module.exports = class ChatServer extends EventEmitter {
 				suffix: client.user.info.titles.suffix,
 			};
 		});
+		//Get user list from discord as well
+		if (this.discordConnected) {
+			let guild = this.bot.guilds.get(this.options.bot.server);
+
+			guild.members.forEach((member) => {
+				if (member.user.bot) {
+					return;
+				}
+				let location = 20; // (Discord)
+				//online
+				//offline
+				//idle
+				//dnd
+				switch (member.presence.status) {
+					case "offline": return;
+					case "idle":
+						location = 9; // (Away)
+						break;
+					case "dnd":
+						location = 11; // (Busy)
+						break;
+					default:
+						break;
+				}
+
+				userlist.push({
+					username: member.user.username,
+					access: 0,
+					location: location,
+					display: member.nickname || member.user.username,
+					color: DiscordUtil.getRoleColor(member),
+					flair: "",
+					prefix: "",
+					suffix: ""
+				});
+			});
+		}
+
+		return userlist;
 	}
 
 	_getServerInfo(callback) {
