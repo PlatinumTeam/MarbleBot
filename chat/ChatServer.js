@@ -292,7 +292,7 @@ module.exports = class ChatServer extends EventEmitter {
 				group: DiscordUtil.getHoistedRoleId(member),
 				location: location,
 				display: member.nickname || member.user.username,
-				color: DiscordUtil.getRoleColor(member),
+				color: DiscordUtil.getUserColor(member),
 				flair: "",
 				prefix: "",
 				suffix: ""
