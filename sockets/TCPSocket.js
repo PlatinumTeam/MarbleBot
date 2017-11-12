@@ -21,6 +21,11 @@ module.exports = class TCPSocket extends Socket {
 		this.nativeSocket.on('end', () => {
 			this.emit('disconnect');
 		});
+		this.nativeSocket.on('error', (e) => {
+			this.disconnect();
+			this.emit('disconnect');
+			console.error('Socket client error: ' + e);
+		});
 	}
 
 	socketType() {

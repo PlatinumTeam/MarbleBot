@@ -9,25 +9,39 @@ module.exports = class ChatServer extends EventEmitter {
 	constructor(options) {
 		super();
 		this.options = options;
+		this.clients = [];
+		this.discordConnected = false;
 
 		this._getServerInfo(this._infoCallback.bind(this));
 	}
 
 	startServers() {
-		let server = this.server = new Server(this.options.server);
-		let bot = this.bot = new Discord.Client();
-		let clients = this.clients = [];
+		this._startDiscordServer();
+		this._startGameServer();
+	}
 
-		bot.on('ready', () => {
-			console.log('Ready! %s#%s - %s', bot.user.username, bot.user.discriminator, bot.user.id);
+	_startDiscordServer() {
+		this.bot = new Discord.Client();
+
+		this.bot.on('ready', () => {
+			console.log('Ready! %s#%s - %s', this.bot.user.username, this.bot.user.discriminator, this.bot.user.id);
+			this.discordConnected = true;
 		});
-		bot.login(this.options.bot.token).catch((e) => {
-			console.error(e.message);
+		this.bot.on('error', (e) => {
+			this.discordConnected = false;
+			console.error("Discord error: " + e);
+			setTimeout(this._connectDiscord.bind(this), 100);
+		});
+		this.bot.on('disconnect', () => {
+			//Because discord's api likes to drop... this happens every few hours actually
+			this.discordConnected = false;
+			console.error("Discord Dropped!");
+			setTimeout(this._connectDiscord.bind(this), 100);
 		});
 
-		bot.on('message', (message) => {
+		this.bot.on('message', (message) => {
 			//Ignore our own messages
-			if (message.author.id === bot.user.id || message.author.bot) {
+			if (message.author.id === this.bot.user.id || message.author.bot) {
 				return;
 			}
 			if (message.channel.id === this.options.bot.channel) {
@@ -38,10 +52,20 @@ module.exports = class ChatServer extends EventEmitter {
 			}
 		});
 
-		server.on('connect', (socket) => {
+		this._connectDiscord();
+	}
+	_connectDiscord() {
+		this.bot.login(this.options.bot.token).catch((e) => {
+			console.error(e.message);
+		});
+	}
+
+	_startGameServer() {
+		this.server = new Server(this.options.server);
+		this.server.on('connect', (socket) => {
 			//Connected a new client, add them to our list
 			let client = new Client(this, socket);
-			clients.push(client);
+			this.clients.push(client);
 
 			//Kick the client if they don't respond
 			let connectTimeout = setTimeout(() => {

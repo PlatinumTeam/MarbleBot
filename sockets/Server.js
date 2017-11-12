@@ -21,6 +21,9 @@ module.exports = class Server extends EventEmitter {
 			let socket = new TCPSocket(s);
 			this.emit('connect', socket);
 		});
+		this.tcpServer.on('error', (e) => {
+			console.log('Socket server error: ' + e);
+		});
 
 		this.websocketServer.on('connection', (ws, req) => {
 			let socket = new WebSocket(ws, req || ws.upgradeReq);
