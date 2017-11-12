@@ -15,6 +15,18 @@ module.exports = class DiscordUtil {
 		return "000000";
 	}
 
+	static getHoistedRoleId(member) {
+		//Go down their roles until you find one that is hoisted
+		let sortedRoles = DiscordUtil.getSortedRoles(member);
+		for (const [roleId, role] of sortedRoles) {
+			if (role.hoist) {
+				return role.id;
+			}
+		}
+
+		return "0";
+	}
+
 	/**
 	 * Get a list of a member's roles, sorted from highest priority to lowest
 	 * @param member
@@ -24,5 +36,15 @@ module.exports = class DiscordUtil {
 		return member.roles.sort((a, b) => {
 			return a.position < b.position;
 		});
+	}
+
+	static formatRoleName(role) {
+		role = role.replace(/-/g, ' ');
+		//Capitalize the first letter of every word in the role name
+		role = role.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+		//If any word is 2 or fewer characters then make it all caps.
+		// Yes this is literally just because one of our roles is "PQ Developers" and looking at "Pq" bothers me.
+		role = role.split(' ').map((word) => word.length < 3 ? word.toUpperCase() : word).join(' ');
+		return role;
 	}
 };

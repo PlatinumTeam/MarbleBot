@@ -101,9 +101,9 @@ module.exports = class ChatServer extends EventEmitter {
 
 			socket.on('disconnect', () => {
 				//Remove from clients list if it exists
-				let index = clients.indexOf(client);
+				let index = this.clients.indexOf(client);
 				if (index !== -1) {
-					clients.splice(index, 1);
+					this.clients.splice(index, 1);
 				}
 
 				console.log("Connection disconnected.");
@@ -122,7 +122,10 @@ module.exports = class ChatServer extends EventEmitter {
 			//Client has logged in, do something
 
 			//Send them the userlist
-			client.sendUserlist(this.getUserlist());
+			client.sendUserlist({
+				users: this.getUserlist(),
+				groups: this.getGroupList()
+			});
 			//Send them the info
 			client.sendInfo(this.info);
 		});
@@ -208,11 +211,83 @@ module.exports = class ChatServer extends EventEmitter {
 		});
 	}
 
+	getGroupList() {
+		let groups = [];
+		let guild = this.bot.guilds.get(this.options.bot.server);
+
+		guild.roles.forEach((role) => {
+			//groupId ordering namePlural nameSingular
+			if (role.hoist) {
+				groups.push({
+					group: role.id,
+					ordering: role.position,
+					name: DiscordUtil.formatRoleName(role.name)
+				});
+			}
+		});
+		groups.push({
+			group: 0,
+			ordering: 0,
+			name: "Users"
+		});
+
+		return groups;
+	}
+
 	getUserlist() {
-		let userlist = this.clients.map((client) => {
-			return {
+		let users = {};
+		let guild = this.bot.guilds.get(this.options.bot.server);
+
+		guild.members.forEach((member) => {
+			if (member.user.bot) {
+				return;
+			}
+			let location = 20; // (Discord)
+			//online
+			//offline
+			//idle
+			//dnd
+			switch (member.presence.status) {
+				case "offline": return;
+				case "idle":
+					location = 9; // (Away)
+					break;
+				case "dnd":
+					location = 11; // (Busy)
+					break;
+				default:
+					break;
+			}
+
+			users[member.user.id] = {
+				username: member.user.username,
+				group: DiscordUtil.getHoistedRoleId(member),
+				location: location,
+				display: member.nickname || member.user.username,
+				color: DiscordUtil.getRoleColor(member),
+				flair: "",
+				prefix: "",
+				suffix: ""
+			};
+		});
+
+		this.clients.forEach((client) => {
+			//Update discord user info with this client's info if we can
+			let discordId = client.user.discordUser.id;
+			if (discordId !== 0) {
+				if (users.hasOwnProperty(discordId)) {
+					users[discordId].location = client.location;
+					users[discordId].color = client.user.info.colorValue;
+					users[discordId].flair = client.user.info.titles.flair;
+					users[discordId].prefix = client.user.info.titles.prefix;
+					users[discordId].suffix = client.user.info.titles.suffix;
+					return;
+				}
+			}
+			//Add user to list with their game info
+			users[client.username] = {
 				username: client.username,
-				access: client.user.info.access,
+				group: client.user.info.access,
 				location: client.location,
 				display: client.display,
 				color: client.user.info.colorValue,
@@ -221,45 +296,8 @@ module.exports = class ChatServer extends EventEmitter {
 				suffix: client.user.info.titles.suffix,
 			};
 		});
-		//Get user list from discord as well
-		if (this.discordConnected) {
-			let guild = this.bot.guilds.get(this.options.bot.server);
 
-			guild.members.forEach((member) => {
-				if (member.user.bot) {
-					return;
-				}
-				let location = 20; // (Discord)
-				//online
-				//offline
-				//idle
-				//dnd
-				switch (member.presence.status) {
-					case "offline": return;
-					case "idle":
-						location = 9; // (Away)
-						break;
-					case "dnd":
-						location = 11; // (Busy)
-						break;
-					default:
-						break;
-				}
-
-				userlist.push({
-					username: member.user.username,
-					access: 0,
-					location: location,
-					display: member.nickname || member.user.username,
-					color: DiscordUtil.getRoleColor(member),
-					flair: "",
-					prefix: "",
-					suffix: ""
-				});
-			});
-		}
-
-		return userlist;
+		return Object.values(users);
 	}
 
 	_getServerInfo(callback) {
