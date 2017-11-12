@@ -16,7 +16,7 @@ module.exports = class ChatServer extends EventEmitter {
 		this._getServerInfo(this._infoCallback.bind(this));
 	}
 
-	startServers() {
+	_startServers() {
 		this._startDiscordServer();
 		this._startGameServer();
 	}
@@ -184,7 +184,7 @@ module.exports = class ChatServer extends EventEmitter {
 		});
 	}
 
-	registerHandlers() {
+	_registerHandlers() {
 		this.on('notify', (info) => {
 
 		});
@@ -454,8 +454,8 @@ module.exports = class ChatServer extends EventEmitter {
 
 		//We're good to start
 		this.info = info;
-		this.startServers();
-		this.registerHandlers();
+		this._startServers();
+		this._registerHandlers();
 	}
 
 	/**
