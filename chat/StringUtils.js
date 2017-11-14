@@ -75,5 +75,46 @@ module.exports = {
 	upperFirst: (str) => {
 		if (str === null) return str;
 		return str[0].toUpperCase() + str.substring(1);
+	},
+	intToZeroWidthStr: (int) => {
+		let zeroWidthSpaces = [
+			'﻿', //Have fun, Jack! You've got no width
+			'‌', //
+			'­',
+			'⁠'
+		];
+		let neg = (int & 0x80000000) !== 0;
+		if (neg) {
+			int ^= 0x80000000;
+		}
+		let formed = '';
+		for (let i = 0; i < 16; i ++) {
+			let last = int & 0x3;
+			if (neg && i === 15) {
+				last |= 2;
+			}
+			int >>= 2;
+			formed += zeroWidthSpaces[last];
+		}
+		return formed;
+	},
+	zeroWidthStrToInt: (str) => {
+		let zeroWidthSpaces = [
+			'﻿',
+			'‌',
+			'­',
+			'⁠'
+		];
+		let formed = 0;
+		for (let i = str.length - 1; i >= 0; i --) {
+			let chr = str[i];
+			let index = zeroWidthSpaces.indexOf(chr);
+			if (index === -1) {
+				return 0;
+			}
+			formed <<= 2;
+			formed |= index;
+		}
+		return formed;
 	}
 };

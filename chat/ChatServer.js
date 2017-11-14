@@ -5,6 +5,7 @@ const Discord = require("discord.js");
 const Client = require("./Client");
 const MessageHandler = require("./MessageHandler");
 const DiscordUtil = require("./DiscordUtil");
+const StringUtils = require("./StringUtils");
 
 module.exports = class ChatServer extends EventEmitter {
 	constructor(options) {
@@ -302,6 +303,7 @@ module.exports = class ChatServer extends EventEmitter {
 			username: message.sender.username,
 			display: message.sender.display,
 			destination: message.destination,
+			senderId: message.sender.userId,
 			access: 0,
 			message: message.message,
 			converted: this._convertMessage(message.message)
@@ -522,7 +524,7 @@ module.exports = class ChatServer extends EventEmitter {
 	_formatGameMessage(message) {
 		let zeroWidthSpace = "​"; //Now it might not look it... but ~~I can't go~~ there's a space there
 
-		return message.display + zeroWidthSpace + ': ' + zeroWidthSpace + message.message;
+		return StringUtils.intToZeroWidthStr(message.senderId) + zeroWidthSpace + message.display + zeroWidthSpace + ': ' + zeroWidthSpace + message.message;
 	}
 
 	_unformatGameMessage(message) {
@@ -547,9 +549,17 @@ module.exports = class ChatServer extends EventEmitter {
 				};
 			}
 		}
+		let senderId = StringUtils.zeroWidthStrToInt(parts[0]);
+		let display = parts[1];
+		let content = parts[3];
+
+		//TODO: Sender id into username
+		console.log('Message from ' + senderId);
+
 		return {
-			username: parts[0],
-			message: parts[2]
+			username: display,
+			display: display,
+			message: content
 		};
 	}
 
