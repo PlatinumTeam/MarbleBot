@@ -70,4 +70,17 @@ module.exports = class DiscordUtil {
 		role = role.split(' ').map((word) => word.length < 3 ? word.toUpperCase() : word).join(' ');
 		return role;
 	}
+
+	static sortMessages(messages) {
+		//Need to add these to a regular array so we don't get a Discord.js collection
+		let sorted = [];
+		for (const [id, role] of messages) {
+			sorted.push(role);
+		}
+		//Sort them lowest timestamp -> highest timestamp
+		sorted.sort((a, b) => {
+			return a.createdTimestamp - b.createdTimestamp;
+		});
+		return sorted;
+	}
 };

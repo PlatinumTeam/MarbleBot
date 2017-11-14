@@ -199,6 +199,8 @@ module.exports = class ChatServer extends EventEmitter {
 			});
 			//Send them the info
 			client.sendInfo(this.info);
+
+			this.sendPreviousMessages(client);
 		});
 
 		this.on('chat', (info) => {
@@ -330,6 +332,17 @@ module.exports = class ChatServer extends EventEmitter {
 		});
 	}
 
+	sendSingleServerChat(client, message) {
+		client.sendMessage('CHAT', {
+			username: 'SERVER',
+			display: 'SERVER',
+			destination: '',
+			access: 1,
+			converted: message,
+			message: message
+		});
+	}
+
 	/**
 	 * Send the user list to all game clients on the server
 	 */
@@ -447,6 +460,26 @@ module.exports = class ChatServer extends EventEmitter {
 		});
 
 		return Object.values(users);
+	}
+
+	sendPreviousMessages(client) {
+		let channel = this.bot.channels.get(this.options.bot.channel);
+		channel.fetchMessages({
+			limit: 20,
+		}).then((messages) => {
+			let sorted = DiscordUtil.sortMessages(messages);
+			for (const message of sorted) {
+				let data = this.getDiscordMessageData(message);
+
+				data.display = '[Old] ' + data.display;
+				data.username = '[Old] ' + data.username;
+				client.sendMessage('CHAT', data);
+			}
+			this.sendSingleServerChat(client, "Previous 20 Chat Messages");
+			this.sendSingleServerChat(client, "----------------------------------");
+		}).catch((error) => {
+			console.log(error);
+		});
 	}
 
 	_getServerInfo(callback) {
