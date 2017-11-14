@@ -250,6 +250,23 @@ module.exports = class ChatServer extends EventEmitter {
 	}
 
 	getDiscordMessageData(message) {
+		if (message.author.id === this.bot.user.id) {
+			//Hey it's one of ours! This means we gotta split up stuff and simplify things
+
+			//Get user and message data from our cleverly encoded message
+			let messageData = this._unformatGameMessage(message);
+			//TODO: Look up user info based on their username
+
+			return {
+				username: messageData.username,
+				display: messageData.username,
+				destination: '', //Always global
+				access: 0, //TODO: Remove access field
+				converted: messageData.message,
+				message: this._deconvertMessage(messageData.message) //Because discord reconverts when sending
+			};
+		}
+
 		//TODO: See if they have a connected account and use its information
 		let messageData = {
 			username: message.author.username,
@@ -305,7 +322,8 @@ module.exports = class ChatServer extends EventEmitter {
 	 */
 	sendGlobalDiscordChat(messageData) {
 		let channel = this.bot.channels.get(this.options.bot.channel);
-		channel.send(messageData.display + ': ' + messageData.message).then((message) => {
+		let formatted = this._formatGameMessage(messageData);
+		channel.send(formatted).then((message) => {
 			//
 		}).catch((e) => {
 			console.error(e.message);
@@ -466,6 +484,40 @@ module.exports = class ChatServer extends EventEmitter {
 		this.info = info;
 		this._startServers();
 		this._registerHandlers();
+	}
+
+	_formatGameMessage(message) {
+		let zeroWidthSpace = "​"; //Now it might not look it... but ~~I can't go~~ there's a space there
+
+		return message.display + zeroWidthSpace + ': ' + zeroWidthSpace + message.message;
+	}
+
+	_unformatGameMessage(message) {
+		let zeroWidthSpace = "​"; //Alright, which one of these many ~~cards~~ widths? Oh none of them? Cool.
+
+		let parts = message.content.split(zeroWidthSpace);
+		if (parts.length === 1) {
+			//Guess?
+			parts = message.content.split(': ');
+			if (parts.length === 1) {
+				//Wtf kind of message is this?
+				return {
+					username: this.bot.user.username,
+					message: message.content
+				};
+			} else {
+				//Ok so at least we can split on space
+				let username = parts.splice(0, 1)[0];
+				return {
+					username: username,
+					message: parts.join(' ')
+				};
+			}
+		}
+		return {
+			username: parts[0],
+			message: parts[2]
+		};
 	}
 
 	/**
