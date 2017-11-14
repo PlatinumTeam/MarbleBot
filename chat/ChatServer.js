@@ -206,51 +206,21 @@ module.exports = class ChatServer extends EventEmitter {
 			let messageData = {};
 			switch (info.type) {
 				case 'discord':
-					//TODO: See if they have a connected account and use its information
-					messageData = {
-						username: info.data.author.username,
-						display: info.data.member.nickname || info.data.author.username,
-						destination: '', //Always global
-						access: 0,
-						converted: info.data.content,
-						message: this._deconvertMessage(info.data.content)
-					};
-
-					//If they attached any files add them to the end of the message
-					let attachments = info.data.attachments;
-
-					//This supports multiple attachments even though the Discord client
-					// can only upload one at a time.
-					attachments.keyArray().forEach((attachId) => {
-						let attachment = attachments.get(attachId);
-						//Append to the message if it has any text
-						if (messageData.message.length > 0) {
-							messageData.message += ' ' + attachment.url;
-						} else {
-							messageData.message = attachment.url;
-						}
-					});
+					messageData = this.getDiscordMessageData(info.data);
 					break;
 				case 'webchat':
-					messageData = {
-						username: info.data.sender.username,
-						display: info.data.sender.display,
-						destination: info.data.destination,
-						access: 0,
-						message: info.data.message,
-						converted: this._convertMessage(info.data.message)
-					};
+					messageData = this.getGameMessageData(info.data);
 					break;
 			}
 			if (messageData.destination === '') {
 				//Global message
 
 				//Tell everyone on webchat even if they sent it
-				this.sendGameChat(messageData);
+				this.sendGlobalGameChat(messageData);
 
 				//Don't send discord messages back to discord, that'd be pretty dumb
 				if (info.type !== 'discord') {
-					this.sendDiscordChat(messageData);
+					this.sendGlobalDiscordChat(messageData);
 				}
 			} else {
 				//Private message
@@ -279,11 +249,51 @@ module.exports = class ChatServer extends EventEmitter {
 		});
 	}
 
+	getDiscordMessageData(message) {
+		//TODO: See if they have a connected account and use its information
+		let messageData = {
+			username: message.author.username,
+			display: message.member.nickname || message.author.username,
+			destination: '', //Always global
+			access: 0, //TODO: Remove access field
+			converted: message.content,
+			message: this._deconvertMessage(message.content)
+		};
+
+		//If they attached any files add them to the end of the message
+		let attachments = message.attachments;
+
+		//This supports multiple attachments even though the Discord client
+		// can only upload one at a time.
+		attachments.keyArray().forEach((attachId) => {
+			let attachment = attachments.get(attachId);
+			//Append to the message if it has any text
+			if (messageData.message.length > 0) {
+				messageData.message += ' ' + attachment.url;
+			} else {
+				messageData.message = attachment.url;
+			}
+		});
+
+		return messageData;
+	}
+
+	getGameMessageData(message) {
+		return {
+			username: message.sender.username,
+			display: message.sender.display,
+			destination: message.destination,
+			access: 0,
+			message: message.message,
+			converted: this._convertMessage(message.message)
+		};
+	}
+
 	/**
 	 * Send a chat message globally to all members connected to the game server
 	 * @param messageData Message data to send, see ChatMessage.js for contents
 	 */
-	sendGameChat(messageData) {
+	sendGlobalGameChat(messageData) {
 		this.clients.forEach((client) => {
 			client.sendMessage('CHAT', messageData);
 		});
@@ -293,7 +303,7 @@ module.exports = class ChatServer extends EventEmitter {
 	 * Send a message to the global Discord channel for this bot.
 	 * @param messageData Message data to send, needs a display and message field
 	 */
-	sendDiscordChat(messageData) {
+	sendGlobalDiscordChat(messageData) {
 		let channel = this.bot.channels.get(this.options.bot.channel);
 		channel.send(messageData.display + ': ' + messageData.message).then((message) => {
 			//
